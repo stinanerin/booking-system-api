@@ -27,20 +27,15 @@ import { MongoClient, ObjectId } from "mongodb";
 
 // ------------------- Connect to database -------------------
 const client = new MongoClient(MONGO_URI);
-client
-    .connect()
-    .then(() => {
-        console.log("Connected to MongoDB via MONGO_URI");
+await client.connect();
 
-        // Define db and collections
-        const db = client.db("booking-system");
-        app.set("mongoClient", client); // Store the MongoDB client in the app instance
+// Define db and collections
+const db = client.db("booking-system");
+app.set("mongoClient", client); // Store the MongoDB client in the app instance
 
-        const bookingsCollection = db.collection("bookings");
-        const usersCollection = db.collection("users");
-    }).catch((error) => {
-        console.log("Error connecting to MongoDB:", error);
-    });
+const bookingsCollection = db.collection("bookings");
+const usersCollection = db.collection("users");
+   
 
 
 
