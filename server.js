@@ -24,7 +24,6 @@ const MONGO_URI = process.env.MONGO_URI;
 import { MongoClient, ObjectId } from "mongodb";
 // ObjectId is needed for accessing specific documents in mongoDB by ID
 
-
 // ------------------- Connect to database -------------------
 const client = new MongoClient(MONGO_URI);
 await client.connect();
@@ -35,9 +34,6 @@ app.set("mongoClient", client); // Store the MongoDB client in the app instance
 
 const bookingsCollection = db.collection("bookings");
 const usersCollection = db.collection("users");
-   
-
-
 
 // ------------------- Middlewares -------------------
 app.use(express.json());
@@ -51,7 +47,13 @@ app.use(
     })
 );
 // Use CORS middleware to allow cross-origin requests
-app.use(cors({ origin: "*" }));
+app.use(
+    cors({
+        origin: "*",
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+        allowedHeaders: "Content-Type,Authorization",
+    })
+);
 
 // ------------------- Routes -------------------
 
@@ -269,7 +271,6 @@ app.post("/api/v.1/user/logout", restrict, (req, res) => {
         });
     });
 });
-
 
 //! ------------------- Start the server -------------------
 // Starting the server and listening for http requests made to the specified port
