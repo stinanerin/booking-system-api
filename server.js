@@ -57,6 +57,10 @@ app.use(
 
 // ------------------- Routes -------------------
 
+app.get("/api/v1/hello", (req, res) => {
+    res.send("Hello, world!");
+});
+
 //! Bookings
 // Get all
 app.get("/api/v.1/bookings", restrict, async (req, res) => {
