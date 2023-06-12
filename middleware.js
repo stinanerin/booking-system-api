@@ -11,33 +11,36 @@ export const restrict = (req, res, next) => {
 };
 
 // Need to signed in and the owner of booking they are trying to access
-export const checkAuthorization = (collection) => {
-    return async (req, res, next) => {
-        try {
-            console.log("bookingsCollection", collection);
+export const checkAuthorization = async(req, res, next) => {
+    try {
+        const client = req.app.get("mongoClient"); // Access the MongoDB client from the app instance
+        const bookingsCollection = client
+            .db("booking-system")
+            .collection("bookings");
 
-            // Is current user, owner of the booking they are currently trying to access
-            const booking = await collection.findOne({
-                _id: new ObjectId(req.params.id),
-                user_id: req.session.userId, // Check ownership
-            });
+        console.log("bookingsCollection", bookingsCollection);
 
-            console.log("booking", booking);
+        // Is current user, owner of the booking they are currently trying to access
+        const booking = await bookingsCollection.findOne({
+            _id: new ObjectId(req.params.id),
+            user_id: req.session.userId, // Check ownership
+        });
 
-            if (booking) {
-                next();
-            } else {
-                res.status(401).json({
-                    acknowledged: false,
-                    error: "Unauthorized",
-                });
-            }
-        } catch (err) {
-            console.log(err);
-            res.status(400).json({
+        console.log("booking", booking);
+
+        if (booking) {
+            next();
+        } else {
+            res.status(401).json({
                 acknowledged: false,
-                error: err.message,
+                error: "Unauthorized",
             });
         }
-    };
+    } catch (err) {
+        console.log(err);
+        res.status(400).json({
+            acknowledged: false,
+            error: err.message,
+        });
+    }
 };

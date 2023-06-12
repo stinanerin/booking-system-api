@@ -1,6 +1,9 @@
 // Henriks console.log
 import console from "hvb-console";
 
+// ------------------- Custom middlewares -------------------
+import { restrict, checkAuthorization } from "./middleware.js";
+
 // ------------------- Setup user sessions -------------------
 import session from "express-session";
 import bcrypt from "bcrypt";
@@ -34,45 +37,6 @@ app.use(
     })
 );
 
-// ------------------- Custom middlewares -------------------
-import { restrict, checkAuthorization } from "./middleware.js";
-
-
-// ------------------- Connect to database -------------------
-
-if (MONGO_URI) {
-    const client = new MongoClient(MONGO_URI);
-    client
-        .connect()
-        .then(() => {
-            console.log("Connected to MongoDB via MONGO_URI");
-
-            // Define db and collections
-            const db = client.db("booking-system");
-            bookingsCollection = db.collection("bookings");
-            usersCollection = db.collection("users");
-        })
-        .catch((error) => {
-            console.log("Error connecting to MongoDB:", error);
-        });
-} else {
-    console.log("No MongoDB URI provided. Starting with local MongoDB.");
-    const client = new MongoClient("mongodb://localhost:27017");
-    client
-        .connect()
-        .then(() => {
-            console.log("Connected to local MongoDB");
-            const db = client.db("booking-system");
-            bookingsCollection = db.collection("bookings");
-            usersCollection = db.collection("users");
-        })
-        .catch((error) => {
-            console.log("Error connecting to local MongoDB:", error);
-        });
-}
-
-
-
 // ------------------- Routes -------------------
 
 //! Bookings
@@ -88,50 +52,46 @@ app.get("/api/v.1/bookings", restrict, async (req, res) => {
         });
     } catch (error) {
         console.error(error);
+
         res.status(400).json({
             acknowledged: false,
             error: error.message,
         });
     }
 });
+
 // Get one
-app.get(
-    "/api/v.1/bookings/:id",
-    checkAuthorization(bookingsCollection),
-    async (req, res) => {
-        console.log(req.params.id);
-        console.log("get one booking");
-        try {
-            const booking = await bookingsCollection.findOne({
-                _id: new ObjectId(req.params.id),
-            });
-            console.log(booking);
+app.get("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
+    try {
+        const booking = await bookingsCollection.findOne({
+            _id: new ObjectId(req.params.id),
+            user_id: req.session.userId,
+        });
 
-            res.json({
-                acknowledged: true,
-                booking,
-            });
-        } catch (error) {
-            console.error(error);
+        res.json({
+            acknowledged: true,
+            booking,
+        });
+    } catch (error) {
+        console.error(error);
 
-            res.status(400).json({
-                acknowledged: false,
-                error: error.message,
-            });
-        }
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
     }
-);
+});
 
 // Add one
 app.post("/api/v.1/bookings", restrict, async (req, res) => {
     console.log(req.body);
 
     try {
-        const { date, user_id } = req.body;
+        const { date } = req.body;
 
         const booking = {
             date,
-            user_id,
+            user_id: req.session.userId,
         };
 
         await bookingsCollection.insertOne(booking);
@@ -151,35 +111,31 @@ app.post("/api/v.1/bookings", restrict, async (req, res) => {
 });
 
 // Delete one
-app.delete(
-    "/api/v.1/bookings/:id",
-    checkAuthorization(bookingsCollection),
-    async (req, res) => {
-        try {
-            const id = req.params.id;
+app.delete("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
+    try {
+        const id = req.params.id;
 
-            const response = await bookingsCollection.deleteOne({
-                _id: new ObjectId(id),
-            });
+        const response = await bookingsCollection.deleteOne({
+            _id: new ObjectId(id),
+        });
 
-            if (response.deletedCount === 0) {
-                throw new Error("No account found with the provided ID");
-            }
-
-            res.json({
-                acknowledged: true,
-                message: `Account #${id} successfully deleted`,
-            });
-        } catch (error) {
-            console.error(error);
-
-            res.status(400).json({
-                acknowledged: false,
-                error: error.message,
-            });
+        if (response.deletedCount === 0) {
+            throw new Error("No account found with the provided ID");
         }
+
+        res.json({
+            acknowledged: true,
+            message: `Account #${id} successfully deleted`,
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
     }
-);
+});
 
 //! Users
 
@@ -299,7 +255,40 @@ app.post("/api/v.1/user/logout", restrict, (req, res) => {
     });
 });
 
+// ------------------- Connect to database -------------------
 
+if (MONGO_URI) {
+    const client = new MongoClient(MONGO_URI);
+    client
+        .connect()
+        .then(() => {
+            console.log("Connected to MongoDB via MONGO_URI");
+
+            // Define db and collections
+            const db = client.db("booking-system");
+            app.set("mongoClient", client); // Store the MongoDB client in the app instance
+
+            bookingsCollection = db.collection("bookings");
+            usersCollection = db.collection("users");
+        })
+        .catch((error) => {
+            console.log("Error connecting to MongoDB:", error);
+        });
+} else {
+    console.log("No MongoDB URI provided. Starting with local MongoDB.");
+    const client = new MongoClient("mongodb://localhost:27017");
+    client
+        .connect()
+        .then(() => {
+            console.log("Connected to local MongoDB");
+            const db = client.db("booking-system");
+            bookingsCollection = db.collection("bookings");
+            usersCollection = db.collection("users");
+        })
+        .catch((error) => {
+            console.log("Error connecting to local MongoDB:", error);
+        });
+}
 
 //! ------------------- Start the server -------------------
 // Starting the server and listening for http requests made to the specified port
