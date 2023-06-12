@@ -34,12 +34,15 @@ app.use(
     })
 );
 
+// ------------------- Custom middlewares -------------------
+import { restrict, checkAuthorization } from "./middleware.js";
+
 // ------------------- Routes -------------------
 
 //! Bookings
 
 // Get all
-app.get("/api/v.1/bookings", async (req, res) => {
+app.get("/api/v.1/bookings", restrict, async (req, res) => {
     try {
         const bookings = await bookingsCollection.find().toArray();
 
@@ -57,7 +60,9 @@ app.get("/api/v.1/bookings", async (req, res) => {
 });
 
 // Get one
-app.get("/api/v.1/bookings/:id", async (req, res) => {
+app.get("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
+    console.log(req.params.id);
+    console.log("get one booking");
     try {
         const booking = await bookingsCollection.findOne({
             _id: new ObjectId(req.params.id),
@@ -79,7 +84,7 @@ app.get("/api/v.1/bookings/:id", async (req, res) => {
 });
 
 // Add one
-app.post("/api/v.1/bookings", async (req, res) => {
+app.post("/api/v.1/bookings", restrict, async (req, res) => {
     console.log(req.body);
 
     try {
@@ -107,7 +112,7 @@ app.post("/api/v.1/bookings", async (req, res) => {
 });
 
 // Delete one
-app.delete("/api/v.1/bookings/:id", async (req, res) => {
+app.delete("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
     try {
         const id = req.params.id;
 
@@ -142,43 +147,42 @@ app.post("/api/v.1/user/login", async (req, res) => {
         });
         console.log(user);
 
-        const { user: username, _id, pass} = user
+        const { user: username, _id, pass } = user;
 
         if (user) {
             const match = await bcrypt.compare(req.body.loginPass, pass);
             if (match) {
                 // Set the user as logged in under current session
                 req.session.user = username;
-                req.session.userId = _id
+                req.session.userId = _id;
 
                 res.json({
                     acknowledged: true,
                     username,
-                })
-
+                });
             } else {
                 res.status(401).json({
                     acknowledged: false,
                     error: "Invalid username or password.",
                     customError: true,
-                })
-                return
+                });
+                return;
             }
         } else {
             res.status(401).json({
                 acknowledged: false,
                 error: "Invalid username or password.",
                 customError: true,
-            })
-            return
+            });
+            return;
         }
     } catch (error) {
-        console.error(error)
+        console.error(error);
 
         res.status(401).json({
             acknowledged: false,
             error: error.message,
-        })
+        });
     }
 });
 
@@ -234,17 +238,17 @@ app.get("/api/v.1/user/active", (req, res) => {
             acknowledged: true,
             user: req.session.user,
             userId: userId,
-        })
+        });
     } else {
         res.status(401).json({
             acknowledged: false,
             error: "Unauthorized",
-        })
+        });
     }
 });
 
 // Logout user
-app.post("/api/v.1/user/logout", (req, res) => {
+app.post("/api/v.1/user/logout", restrict, (req, res) => {
     req.session.destroy(() => {
         res.json({
             loggedin: false,
