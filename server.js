@@ -1,10 +1,16 @@
 // Henriks console.log
 import console from "hvb-console";
 
+// ------------------- Setup user sessions -------------------
+import session from "express-session";
+import bcrypt from "bcrypt";
+
 // ------------------- Setup express -------------------
 import express from "express";
 const app = express();
 const PORT = process.env.PORT || 3000;
+// For encryption
+const SALT_ROUNDS = 10;
 
 // ------------------- Setup .env & Mongo -------------------
 import dotenv from "dotenv";
@@ -18,6 +24,15 @@ let usersCollection;
 
 // ------------------- Middlewares -------------------
 app.use(express.json());
+app.use(
+    session({
+        // don't save session if unmodified
+        resave: false,
+        // don't create session until something stored
+        saveUninitialized: false,
+        secret: "shhhh very secret string",
+    })
+);
 
 // ------------------- Routes -------------------
 
@@ -92,10 +107,8 @@ app.post("/api/v.1/bookings", async (req, res) => {
 });
 
 // Delete one
-
 app.delete("/api/v.1/bookings/:id", async (req, res) => {
     try {
-
         const id = req.params.id;
 
         const response = await bookingsCollection.deleteOne({
@@ -105,12 +118,11 @@ app.delete("/api/v.1/bookings/:id", async (req, res) => {
         if (response.deletedCount === 0) {
             throw new Error("No account found with the provided ID");
         }
-        
+
         res.json({
             acknowledged: true,
             message: `Account #${id} successfully deleted`,
         });
-
     } catch (error) {
         console.error(error);
 
@@ -119,6 +131,125 @@ app.delete("/api/v.1/bookings/:id", async (req, res) => {
             error: error.message,
         });
     }
+});
+
+//! Users
+
+app.post("/api/v.1/user/login", async (req, res) => {
+    try {
+        const user = await usersCollection.findOne({
+            user: req.body.loginName,
+        });
+        console.log(user);
+
+        const { user: username, _id, pass} = user
+
+        if (user) {
+            const match = await bcrypt.compare(req.body.loginPass, pass);
+            if (match) {
+                // Set the user as logged in under current session
+                req.session.user = username;
+                req.session.userId = _id
+
+                res.json({
+                    acknowledged: true,
+                    username,
+                })
+
+            } else {
+                res.status(401).json({
+                    acknowledged: false,
+                    error: "Invalid username or password.",
+                    customError: true,
+                })
+                return
+            }
+        } else {
+            res.status(401).json({
+                acknowledged: false,
+                error: "Invalid username or password.",
+                customError: true,
+            })
+            return
+        }
+    } catch (error) {
+        console.error(error)
+
+        res.status(401).json({
+            acknowledged: false,
+            error: error.message,
+        })
+    }
+});
+
+// Register user
+app.post("/api/v.1/user/register", async (req, res) => {
+    try {
+        console.info("api register");
+
+        const takenUsername = await usersCollection.findOne({
+            user: req.body.regName,
+        });
+        console.log("takenUsername", takenUsername);
+        if (!takenUsername) {
+            console.log(req.body.regName);
+            const hash = await bcrypt.hash(req.body.regPass, SALT_ROUNDS);
+
+            const newUser = await usersCollection.insertOne({
+                user: req.body.regName,
+                pass: hash,
+            });
+            if (newUser.acknowledged) {
+                console.log(newUser);
+                req.session.user = req.body.regName;
+                req.session.userId = newUser.insertedId;
+                res.json({
+                    acknowledged: true,
+                    user: req.body.regName,
+                });
+            }
+        } else {
+            res.status(400).json({
+                acknowledged: false,
+                error: "Username already exists",
+                customError: true,
+            });
+            return;
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(400).json({
+            acknowledged: false,
+            error: err.message,
+        });
+    }
+});
+
+// Get active user
+app.get("/api/v.1/user/active", (req, res) => {
+    console.log("req.session", req.session);
+    if (req.session.user) {
+        const userId = req.session.userId;
+        res.json({
+            acknowledged: true,
+            user: req.session.user,
+            userId: userId,
+        })
+    } else {
+        res.status(401).json({
+            acknowledged: false,
+            error: "Unauthorized",
+        })
+    }
+});
+
+// Logout user
+app.post("/api/v.1/user/logout", (req, res) => {
+    req.session.destroy(() => {
+        res.json({
+            loggedin: false,
+        });
+    });
 });
 
 // ------------------- Connect to database -------------------
