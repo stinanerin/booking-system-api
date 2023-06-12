@@ -1,4 +1,9 @@
 {
+  "name": "your-app",
+  "version": "1.0.0",
+  "engines": {
+    "node": "14.x"
+  },
   "type": "module",
   "dependencies": {
     "bcrypt": "^5.1.0",
