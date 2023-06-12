@@ -6,7 +6,6 @@ import express from "express";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
 // ------------------- Setup .env & Mongo -------------------
 import dotenv from "dotenv";
 dotenv.config();
@@ -16,7 +15,6 @@ import { MongoClient, ObjectId } from "mongodb";
 
 let bookingsCollection;
 let usersCollection;
-
 
 // ------------------- Connect to db -------------------
 
@@ -50,7 +48,6 @@ if (MONGO_URI) {
             console.log("Error connecting to local MongoDB:", error);
         });
 }
-
 
 //! ------------------- Start the server -------------------
 // Starting the server and listening for http requests made to the specified port
