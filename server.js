@@ -16,7 +16,112 @@ import { MongoClient, ObjectId } from "mongodb";
 let bookingsCollection;
 let usersCollection;
 
-// ------------------- Connect to db -------------------
+// ------------------- Middlewares -------------------
+app.use(express.json());
+
+// ------------------- Routes -------------------
+
+//! Bookings
+
+// Get all
+app.get("/api/v.1/bookings", async (req, res) => {
+    try {
+        const bookings = await bookingsCollection.find().toArray();
+
+        res.json({
+            acknowledged: true,
+            bookings,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
+    }
+});
+
+// Get one
+app.get("/api/v.1/bookings/:id", async (req, res) => {
+    try {
+        const booking = await bookingsCollection.findOne({
+            _id: new ObjectId(req.params.id),
+        });
+        console.log(booking);
+
+        res.json({
+            acknowledged: true,
+            booking,
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
+    }
+});
+
+// Add one
+app.post("/api/v.1/bookings", async (req, res) => {
+    console.log(req.body);
+
+    try {
+        const { date, user_id } = req.body;
+
+        const booking = {
+            date,
+            user_id,
+        };
+
+        await bookingsCollection.insertOne(booking);
+
+        res.json({
+            acknowledged: true,
+            booking,
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
+    }
+});
+
+// Delete one
+
+app.delete("/api/v.1/bookings/:id", async (req, res) => {
+    try {
+
+        const id = req.params.id;
+
+        const response = await bookingsCollection.deleteOne({
+            _id: new ObjectId(id),
+        });
+
+        if (response.deletedCount === 0) {
+            throw new Error("No account found with the provided ID");
+        }
+        
+        res.json({
+            acknowledged: true,
+            message: `Account #${id} successfully deleted`,
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
+    }
+});
+
+// ------------------- Connect to database -------------------
 
 if (MONGO_URI) {
     const client = new MongoClient(MONGO_URI);
