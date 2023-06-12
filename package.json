@@ -15,5 +15,8 @@
     "hvb-console": "^0.0.2",
     "mongodb": "^5.6.0",
     "nodemon": "^2.0.22"
+  },
+  "scripts": {
+    "start": "node server.js"
   }
 }
