@@ -1,6 +1,9 @@
 // Henriks console.log
 import console from "hvb-console";
 
+
+import cors from "cors";
+
 // ------------------- Custom middlewares -------------------
 import { restrict, checkAuthorization } from "./middleware.js";
 
@@ -36,6 +39,8 @@ app.use(
         secret: "shhhh very secret string",
     })
 );
+// Use CORS middleware to allow cross-origin requests
+app.use(cors());
 
 // ------------------- Routes -------------------
 
