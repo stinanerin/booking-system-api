@@ -24,8 +24,25 @@ const MONGO_URI = process.env.MONGO_URI;
 import { MongoClient, ObjectId } from "mongodb";
 // ObjectId is needed for accessing specific documents in mongoDB by ID
 
-let bookingsCollection;
-let usersCollection;
+
+// ------------------- Connect to database -------------------
+const client = new MongoClient(MONGO_URI);
+client
+    .connect()
+    .then(() => {
+        console.log("Connected to MongoDB via MONGO_URI");
+
+        // Define db and collections
+        const db = client.db("booking-system");
+        app.set("mongoClient", client); // Store the MongoDB client in the app instance
+
+        const bookingsCollection = db.collection("bookings");
+        const usersCollection = db.collection("users");
+    }).catch((error) => {
+        console.log("Error connecting to MongoDB:", error);
+    });
+
+
 
 // ------------------- Middlewares -------------------
 app.use(express.json());
@@ -41,274 +58,223 @@ app.use(
 // Use CORS middleware to allow cross-origin requests
 app.use(cors());
 
-// ------------------- Connect to database -------------------
+// ------------------- Routes -------------------
 
-if (MONGO_URI) {
-    const client = new MongoClient(MONGO_URI);
-    client
-        .connect()
-        .then(() => {
-            console.log("Connected to MongoDB via MONGO_URI");
+//! Bookings
+// Get all
+app.get("/api/v.1/bookings", restrict, async (req, res) => {
+    try {
+        const bookings = await bookingsCollection.find().toArray();
 
-            // Define db and collections
-            const db = client.db("booking-system");
-            app.set("mongoClient", client); // Store the MongoDB client in the app instance
+        res.json({
+            acknowledged: true,
+            bookings,
+        });
+    } catch (error) {
+        console.error(error);
 
-            bookingsCollection = db.collection("bookings");
-            usersCollection = db.collection("users");
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
+    }
+});
 
-            // ------------------- Routes -------------------
+// Get one
+app.get("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
+    try {
+        const booking = await bookingsCollection.findOne({
+            _id: new ObjectId(req.params.id),
+            user_id: req.session.userId,
+        });
 
-            //! Bookings
-            // Get all
-            app.get("/api/v.1/bookings", restrict, async (req, res) => {
-                try {
-                    const bookings = await bookingsCollection.find().toArray();
+        res.json({
+            acknowledged: true,
+            booking,
+        });
+    } catch (error) {
+        console.error(error);
 
-                    res.json({
-                        acknowledged: true,
-                        bookings,
-                    });
-                } catch (error) {
-                    console.error(error);
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
+    }
+});
 
-                    res.status(400).json({
-                        acknowledged: false,
-                        error: error.message,
-                    });
-                }
-            });
+// Add one
+app.post("/api/v.1/bookings", restrict, async (req, res) => {
+    console.log(req.body);
 
-            // Get one
-            app.get(
-                "/api/v.1/bookings/:id",
-                checkAuthorization,
-                async (req, res) => {
-                    try {
-                        const booking = await bookingsCollection.findOne({
-                            _id: new ObjectId(req.params.id),
-                            user_id: req.session.userId,
-                        });
+    try {
+        const { date } = req.body;
 
-                        res.json({
-                            acknowledged: true,
-                            booking,
-                        });
-                    } catch (error) {
-                        console.error(error);
+        const booking = {
+            date,
+            user_id: req.session.userId,
+        };
 
-                        res.status(400).json({
-                            acknowledged: false,
-                            error: error.message,
-                        });
-                    }
-                }
-            );
+        await bookingsCollection.insertOne(booking);
 
-            // Add one
-            app.post("/api/v.1/bookings", restrict, async (req, res) => {
-                console.log(req.body);
+        res.json({
+            acknowledged: true,
+            booking,
+        });
+    } catch (error) {
+        console.error(error);
 
-                try {
-                    const { date } = req.body;
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
+    }
+});
 
-                    const booking = {
-                        date,
-                        user_id: req.session.userId,
-                    };
+// Delete one
+app.delete("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
+    try {
+        const id = req.params.id;
 
-                    await bookingsCollection.insertOne(booking);
+        const response = await bookingsCollection.deleteOne({
+            _id: new ObjectId(id),
+        });
 
-                    res.json({
-                        acknowledged: true,
-                        booking,
-                    });
-                } catch (error) {
-                    console.error(error);
+        if (response.deletedCount === 0) {
+            throw new Error("No account found with the provided ID");
+        }
 
-                    res.status(400).json({
-                        acknowledged: false,
-                        error: error.message,
-                    });
-                }
-            });
+        res.json({
+            acknowledged: true,
+            message: `Account #${id} successfully deleted`,
+        });
+    } catch (error) {
+        console.error(error);
 
-            // Delete one
-            app.delete(
-                "/api/v.1/bookings/:id",
-                checkAuthorization,
-                async (req, res) => {
-                    try {
-                        const id = req.params.id;
+        res.status(400).json({
+            acknowledged: false,
+            error: error.message,
+        });
+    }
+});
 
-                        const response = await bookingsCollection.deleteOne({
-                            _id: new ObjectId(id),
-                        });
+//! Users
 
-                        if (response.deletedCount === 0) {
-                            throw new Error(
-                                "No account found with the provided ID"
-                            );
-                        }
+app.post("/api/v.1/user/login", async (req, res) => {
+    try {
+        const user = await usersCollection.findOne({
+            user: req.body.loginName,
+        });
+        console.log(user);
 
-                        res.json({
-                            acknowledged: true,
-                            message: `Account #${id} successfully deleted`,
-                        });
-                    } catch (error) {
-                        console.error(error);
+        if (user) {
+            const { user: username, _id, pass } = user;
 
-                        res.status(400).json({
-                            acknowledged: false,
-                            error: error.message,
-                        });
-                    }
-                }
-            );
+            const match = await bcrypt.compare(req.body.loginPass, pass);
+            if (match) {
+                // Set the user as logged in under current session
+                req.session.user = username;
+                req.session.userId = _id;
 
-            //! Users
-
-            app.post("/api/v.1/user/login", async (req, res) => {
-                try {
-                    const user = await usersCollection.findOne({
-                        user: req.body.loginName,
-                    });
-                    console.log(user);
-
-                    if (user) {
-                        const { user: username, _id, pass } = user;
-
-                        const match = await bcrypt.compare(
-                            req.body.loginPass,
-                            pass
-                        );
-                        if (match) {
-                            // Set the user as logged in under current session
-                            req.session.user = username;
-                            req.session.userId = _id;
-
-                            res.json({
-                                acknowledged: true,
-                                username,
-                            });
-                        } else {
-                            res.status(401).json({
-                                acknowledged: false,
-                                error: "Invalid username or password.",
-                                customError: true,
-                            });
-                            return;
-                        }
-                    } else {
-                        res.status(401).json({
-                            acknowledged: false,
-                            error: "Invalid username or password.",
-                            customError: true,
-                        });
-                        return;
-                    }
-                } catch (error) {
-                    console.error(error);
-
-                    res.status(401).json({
-                        acknowledged: false,
-                        error: error.message,
-                    });
-                }
-            });
-
-            // Register user
-            app.post("/api/v.1/user/register", async (req, res) => {
-                try {
-                    console.info("api register");
-
-                    const takenUsername = await usersCollection.findOne({
-                        user: req.body.regName,
-                    });
-                    console.log("takenUsername", takenUsername);
-                    if (!takenUsername) {
-                        console.log(req.body.regName);
-                        const hash = await bcrypt.hash(
-                            req.body.regPass,
-                            SALT_ROUNDS
-                        );
-
-                        const newUser = await usersCollection.insertOne({
-                            user: req.body.regName,
-                            pass: hash,
-                        });
-                        if (newUser.acknowledged) {
-                            console.log(newUser);
-                            req.session.user = req.body.regName;
-                            req.session.userId = newUser.insertedId;
-                            res.json({
-                                acknowledged: true,
-                                user: req.body.regName,
-                            });
-                        }
-                    } else {
-                        res.status(400).json({
-                            acknowledged: false,
-                            error: "Username already exists",
-                            customError: true,
-                        });
-                        return;
-                    }
-                } catch (err) {
-                    console.error(err);
-                    res.status(400).json({
-                        acknowledged: false,
-                        error: err.message,
-                    });
-                }
-            });
-
-            // Get active user
-            app.get("/api/v.1/user/active", (req, res) => {
-                console.log("req.session", req.session);
-                if (req.session.user) {
-                    const userId = req.session.userId;
-                    res.json({
-                        acknowledged: true,
-                        user: req.session.user,
-                        userId: userId,
-                    });
-                } else {
-                    res.status(401).json({
-                        acknowledged: false,
-                        error: "Unauthorized",
-                    });
-                }
-            });
-
-            // Logout user
-            app.post("/api/v.1/user/logout", restrict, (req, res) => {
-                req.session.destroy(() => {
-                    res.json({
-                        loggedin: false,
-                    });
+                res.json({
+                    acknowledged: true,
+                    username,
                 });
+            } else {
+                res.status(401).json({
+                    acknowledged: false,
+                    error: "Invalid username or password.",
+                    customError: true,
+                });
+                return;
+            }
+        } else {
+            res.status(401).json({
+                acknowledged: false,
+                error: "Invalid username or password.",
+                customError: true,
             });
-        })
+            return;
+        }
+    } catch (error) {
+        console.error(error);
 
-        .catch((error) => {
-            console.log("Error connecting to MongoDB:", error);
+        res.status(401).json({
+            acknowledged: false,
+            error: error.message,
         });
-} else {
-    console.log("No MongoDB URI provided. Starting with local MongoDB.");
-    const client = new MongoClient("mongodb://localhost:27017");
-    client
-        .connect()
-        .then(() => {
-            console.log("Connected to local MongoDB");
-            const db = client.db("booking-system");
-            bookingsCollection = db.collection("bookings");
-            usersCollection = db.collection("users");
-        })
-        .catch((error) => {
-            console.log("Error connecting to local MongoDB:", error);
+    }
+});
+
+// Register user
+app.post("/api/v.1/user/register", async (req, res) => {
+    try {
+        console.info("api register");
+
+        const takenUsername = await usersCollection.findOne({
+            user: req.body.regName,
         });
-}
+        console.log("takenUsername", takenUsername);
+        if (!takenUsername) {
+            console.log(req.body.regName);
+            const hash = await bcrypt.hash(req.body.regPass, SALT_ROUNDS);
+
+            const newUser = await usersCollection.insertOne({
+                user: req.body.regName,
+                pass: hash,
+            });
+            if (newUser.acknowledged) {
+                console.log(newUser);
+                req.session.user = req.body.regName;
+                req.session.userId = newUser.insertedId;
+                res.json({
+                    acknowledged: true,
+                    user: req.body.regName,
+                });
+            }
+        } else {
+            res.status(400).json({
+                acknowledged: false,
+                error: "Username already exists",
+                customError: true,
+            });
+            return;
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(400).json({
+            acknowledged: false,
+            error: err.message,
+        });
+    }
+});
+
+// Get active user
+app.get("/api/v.1/user/active", (req, res) => {
+    console.log("req.session", req.session);
+    if (req.session.user) {
+        const userId = req.session.userId;
+        res.json({
+            acknowledged: true,
+            user: req.session.user,
+            userId: userId,
+        });
+    } else {
+        res.status(401).json({
+            acknowledged: false,
+            error: "Unauthorized",
+        });
+    }
+});
+
+// Logout user
+app.post("/api/v.1/user/logout", restrict, (req, res) => {
+    req.session.destroy(() => {
+        res.json({
+            loggedin: false,
+        });
+    });
+});
+
 
 //! ------------------- Start the server -------------------
 // Starting the server and listening for http requests made to the specified port
