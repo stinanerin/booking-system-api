@@ -178,6 +178,8 @@ app.post("/api/v.1/user/login", async (req, res) => {
                 req.session.user = username;
                 req.session.userId = _id;
 
+                req.session.save(); // Save the session
+
                 console.log("req.session.user", req.session.user); // Check if req.session.user is set correctly
 
                 res.json({
@@ -255,8 +257,8 @@ app.post("/api/v.1/user/register", async (req, res) => {
 
 // Get active user
 app.get("/api/v.1/user/active", (req, res) => {
-    console.log("req.session", req.session);
-    console.log("req.session.user", req.session.user);
+    console.log("req.session active", req.session);
+    console.log("req.session.user active", req.session.user);
     if (req.session.user) {
         console.log("inside req.session.user === true");
         const userId = req.session.userId;
