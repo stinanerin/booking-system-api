@@ -52,6 +52,7 @@ app.use(
         origin: "*",
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         allowedHeaders: "Content-Type,Authorization",
+        credentials: true,
     })
 );
 
@@ -252,7 +253,9 @@ app.post("/api/v.1/user/register", async (req, res) => {
 // Get active user
 app.get("/api/v.1/user/active", (req, res) => {
     console.log("req.session", req.session);
+    console.log("req.session.user", req.session.user);
     if (req.session.user) {
+        console.log("inside req.session.user === true");
         const userId = req.session.userId;
         res.json({
             acknowledged: true,
