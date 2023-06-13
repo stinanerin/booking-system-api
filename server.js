@@ -51,7 +51,10 @@ app.use(
 // Use CORS middleware to allow cross-origin requests
 app.use(
     cors({
-        origin: "http://127.0.0.1:5502",
+        origin: [
+            "http://127.0.0.1:5502",
+            "https://express-booking-system-backend.herokuapp.com/",
+        ],
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         allowedHeaders: "Content-Type,Authorization",
         credentials: true,
