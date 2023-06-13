@@ -61,8 +61,12 @@ app.use(
     })
 );
 // Use CORS middleware to allow cross-origin requests
-app.use(cors());
-
+app.use(
+    cors({
+        origin: "https://stormstina.github.io",
+        credentials: true,
+    })
+);
 // ------------------- Routes -------------------
 
 app.get("/api/v1/hello", (req, res) => {
