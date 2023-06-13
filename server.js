@@ -52,25 +52,14 @@ app.use(
             dbName: "booking-system",
         }),
         cookie: {
-            secure: false, 
+            secure: false,
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000, // Session duration in milliseconds (e.g., 24 hours)
         },
     })
 );
 // Use CORS middleware to allow cross-origin requests
-app.use(
-    cors({
-        origin: [
-            "https://stormstina.github.io/laundry-room-booking-system/",
-            "http://127.0.0.1:5502",
-            "https://express-booking-system-backend.herokuapp.com",
-        ],
-        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-        allowedHeaders: "Content-Type,Authorization",
-        credentials: true,
-    })
-);
+app.use(cors());
 
 // ------------------- Routes -------------------
 
