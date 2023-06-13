@@ -10,6 +10,7 @@ import { restrict, checkAuthorization } from "./middleware.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import bcrypt from "bcrypt";
+import MongoStore from "connect-mongo";
 
 // ------------------- Setup express -------------------
 import express from "express";
@@ -46,6 +47,15 @@ app.use(
         // don't create session until something stored
         saveUninitialized: false,
         secret: "shhhh very secret string",
+        store: MongoStore.create({
+            mongoUrl: MONGO_URI,
+            dbName: "booking-system",
+        }),
+        cookie: {
+            secure: false, 
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000, // Session duration in milliseconds (e.g., 24 hours)
+        },
     })
 );
 // Use CORS middleware to allow cross-origin requests
