@@ -15,6 +15,7 @@ import MongoStore from "connect-mongo";
 // ------------------- Setup express -------------------
 import express from "express";
 const app = express();
+app.set("trust proxy", 1)
 const PORT = process.env.PORT || 3000;
 // For encryption of passwords
 const SALT_ROUNDS = 10;
