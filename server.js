@@ -52,7 +52,7 @@ app.use(
             dbName: "booking-system",
         }),
         cookie: {
-            secure: false,
+            secure: true,
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000, // Session duration in milliseconds (e.g., 24 hours)
         },
