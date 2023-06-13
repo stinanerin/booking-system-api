@@ -51,7 +51,7 @@ app.use(
 // Use CORS middleware to allow cross-origin requests
 app.use(
     cors({
-        origin: "*",
+        origin: "http://127.0.0.1:5502",
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         allowedHeaders: "Content-Type,Authorization",
         credentials: true,
