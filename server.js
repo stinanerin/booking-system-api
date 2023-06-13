@@ -62,8 +62,9 @@ app.use(
 app.use(
     cors({
         origin: [
+            "https://stormstina.github.io/laundry-room-booking-system/",
             "http://127.0.0.1:5502",
-            "https://express-booking-system-backend.herokuapp.com/",
+            "https://express-booking-system-backend.herokuapp.com",
         ],
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         allowedHeaders: "Content-Type,Authorization",
