@@ -7,6 +7,7 @@ import cors from "cors";
 import { restrict, checkAuthorization } from "./middleware.js";
 
 // ------------------- Setup user sessions -------------------
+import cookieParser from "cookie-parser";
 import session from "express-session";
 import bcrypt from "bcrypt";
 
@@ -36,6 +37,7 @@ const bookingsCollection = db.collection("bookings");
 const usersCollection = db.collection("users");
 
 // ------------------- Middlewares -------------------
+app.use(cookieParser());
 app.use(express.json());
 app.use(
     session({
