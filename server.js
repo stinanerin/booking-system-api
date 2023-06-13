@@ -166,16 +166,19 @@ app.post("/api/v.1/user/login", async (req, res) => {
         const user = await usersCollection.findOne({
             user: req.body.loginName,
         });
-        console.log(user);
+        console.log("login user", user);
 
         if (user) {
             const { user: username, _id, pass } = user;
 
             const match = await bcrypt.compare(req.body.loginPass, pass);
             if (match) {
+                console.log("inside login match");
                 // Set the user as logged in under current session
                 req.session.user = username;
                 req.session.userId = _id;
+
+                console.log("req.session.user", req.session.user); // Check if req.session.user is set correctly
 
                 res.json({
                     acknowledged: true,
