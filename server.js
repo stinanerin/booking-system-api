@@ -146,6 +146,9 @@ app.post("/api/v.1/bookings", restrict, async (req, res) => {
     }
 });
 
+// Enable pre-flight requests for the route
+app.options("/api/v.1/bookings", cors()); 
+
 // Delete one
 app.delete("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
     try {
