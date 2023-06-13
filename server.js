@@ -52,6 +52,7 @@ app.use(
             mongoUrl: MONGO_URI,
             dbName: "booking-system",
         }),
+        proxy: true,
         cookie: {
             secure: true,
             httpOnly: true,
