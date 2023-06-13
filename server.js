@@ -46,7 +46,7 @@ app.use(
         // don't save session if unmodified
         resave: false,
         // don't create session until something stored
-        saveUninitialized: false,
+        saveUninitialized: false, // GDPR - user has to give consent
         secret: "shhhh very secret string",
         store: MongoStore.create({
             mongoUrl: MONGO_URI,
@@ -55,7 +55,7 @@ app.use(
         proxy: true,
         cookie: {
             sameSite: 'none',
-            secure: (process.env.NODE_ENV && process.env.NODE_ENV == 'production') ? true:false,
+            secure: process.env.NODE_ENV == 'production',
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000, // Session duration in milliseconds (e.g., 24 hours)
         },
@@ -75,10 +75,6 @@ app.use(
     })
 );
 // ------------------- Routes -------------------
-
-app.get("/api/v1/hello", (req, res) => {
-    res.send("Hello, world!");
-});
 
 //! Bookings
 // Get all
@@ -272,6 +268,28 @@ app.post("/api/v.1/user/register", async (req, res) => {
         });
     }
 });
+
+// Get currently signed-in user's booking
+app.get("/api/v.1/user/booking", checkAuthorization, async(req, res) => {
+    try {
+
+        const userId = req.session.userId;
+
+        const booking = await bookingsCollection.findOne({user_id: userId })
+
+        res.json({
+            acknowledged: true,
+            booking,
+        });
+        
+    } catch (error) {
+        console.error(err);
+        res.status(400).json({
+            acknowledged: false,
+            error: err.message,
+        });
+    }
+})
 
 // Get active user
 app.get("/api/v.1/user/active", (req, res) => {
