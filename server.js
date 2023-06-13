@@ -54,6 +54,7 @@ app.use(
         }),
         proxy: true,
         cookie: {
+            sameSite: 'none',
             secure: (process.env.NODE_ENV && process.env.NODE_ENV == 'production') ? true:false,
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000, // Session duration in milliseconds (e.g., 24 hours)
@@ -68,6 +69,8 @@ app.use(
             "http://127.0.0.1:5502",
             "https://express-booking-system-backend.herokuapp.com",
         ],
+        methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+
         credentials: true,
     })
 );
