@@ -274,7 +274,10 @@ app.post("/api/v.1/user/register", async (req, res) => {
 
 // Get currently signed-in user's booking
 app.get("/api/v.1/user/booking", checkAuthorization, async(req, res) => {
+    console.log("hej inside /user/booking");
     try {
+
+        console.log("hej inside try{} /user/booking");
 
         const userId = req.session.userId;
 
