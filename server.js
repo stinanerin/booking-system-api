@@ -70,10 +70,10 @@ app.use(
             "https://express-booking-system-backend.herokuapp.com",
         ],
         methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
-
         credentials: true,
     })
 );
+
 // ------------------- Routes -------------------
 
 //! Bookings
@@ -278,8 +278,10 @@ app.get("/api/v.1/user/booking", checkAuthorization, async(req, res) => {
 
         const userId = req.session.userId;
 
-        const booking = await bookingsCollection.findOne({user_id: userId })
+        console.log("userId inside /user/booking ", userId);
 
+        const booking = await bookingsCollection.findOne({user_id: userId })
+        console.log("booking inside /user/booking", booking);
         res.json({
             acknowledged: true,
             booking,
