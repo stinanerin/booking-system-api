@@ -120,15 +120,19 @@ app.get("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
 
 // Add one
 app.post("/api/v.1/bookings", restrict, async (req, res) => {
-    console.log(req.body);
+    console.log("inside post /bookings", req.body);
 
     try {
         const { date } = req.body;
+
+        console.log("date inside post /bookings", date);
 
         const booking = {
             date,
             user_id: req.session.userId,
         };
+
+        console.log("booking inside post /bookings", booking);
 
         await bookingsCollection.insertOne(booking);
 
@@ -137,7 +141,7 @@ app.post("/api/v.1/bookings", restrict, async (req, res) => {
             booking,
         });
     } catch (error) {
-        console.error(error);
+        console.error("error inside post /bookings", error);
 
         res.status(400).json({
             acknowledged: false,
@@ -146,8 +150,7 @@ app.post("/api/v.1/bookings", restrict, async (req, res) => {
     }
 });
 
-// Enable pre-flight requests for the route
-app.options("/api/v.1/bookings", cors()); 
+
 
 // Delete one
 app.delete("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
@@ -183,21 +186,15 @@ app.post("/api/v.1/user/login", async (req, res) => {
         const user = await usersCollection.findOne({
             user: req.body.loginName,
         });
-        console.log("login user", user);
 
         if (user) {
             const { user: username, _id, pass } = user;
 
             const match = await bcrypt.compare(req.body.loginPass, pass);
             if (match) {
-                console.log("inside login match");
                 // Set the user as logged in under current session
                 req.session.user = username;
                 req.session.userId = _id;
-
-                req.session.save(); // Save the session
-
-                console.log("req.session.user", req.session.user); // Check if req.session.user is set correctly
 
                 res.json({
                     acknowledged: true,
@@ -237,9 +234,7 @@ app.post("/api/v.1/user/register", async (req, res) => {
         const takenUsername = await usersCollection.findOne({
             user: req.body.regName,
         });
-        console.log("takenUsername", takenUsername);
         if (!takenUsername) {
-            console.log(req.body.regName);
             const hash = await bcrypt.hash(req.body.regPass, SALT_ROUNDS);
 
             const newUser = await usersCollection.insertOne({
@@ -247,7 +242,6 @@ app.post("/api/v.1/user/register", async (req, res) => {
                 pass: hash,
             });
             if (newUser.acknowledged) {
-                console.log(newUser);
                 req.session.user = req.body.regName;
                 req.session.userId = newUser.insertedId;
                 res.json({
@@ -274,23 +268,16 @@ app.post("/api/v.1/user/register", async (req, res) => {
 
 // Get currently signed-in user's booking
 app.get("/api/v.1/user/booking", async(req, res) => {
-    console.log("hej inside /user/booking");
     try {
-
-        console.log("hej inside try{} /user/booking");
-
         const userId = req.session.userId;
 
-        console.log("userId inside /user/booking ", userId);
+        const booking = await bookingsCollection.findOne({ user_id: userId });
 
-        const booking = await bookingsCollection.findOne({user_id: userId })
-        console.log("booking inside /user/booking", booking);
         res.json({
             acknowledged: true,
             booking,
         });
-        
-    } catch (error) {
+    } catch (err) {
         console.error(err);
         res.status(400).json({
             acknowledged: false,
@@ -301,10 +288,7 @@ app.get("/api/v.1/user/booking", async(req, res) => {
 
 // Get active user
 app.get("/api/v.1/user/active", (req, res) => {
-    console.log("req.session active", req.session);
-    console.log("req.session.user active", req.session.user);
     if (req.session.user) {
-        console.log("inside req.session.user === true");
         const userId = req.session.userId;
         res.json({
             acknowledged: true,
