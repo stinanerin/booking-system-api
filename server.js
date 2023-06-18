@@ -69,7 +69,7 @@ app.use(
             "http://127.0.0.1:5502",
             "https://express-booking-system-backend.herokuapp.com",
         ],
-        methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+        methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD", "DELETE"],
         credentials: true,
     })
 );
@@ -119,8 +119,8 @@ app.get("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
 });
 
 // Add one
-app.post("/api/v.1/bookings", restrict, async (req, res) => {
-    console.log("inside post /bookings", req.body);
+app.post("/api/v.1/bookings", restrict, async(req, res) => {
+    console.log("inside post /bookings");
 
     try {
         const { date } = req.body;
