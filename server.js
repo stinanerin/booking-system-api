@@ -184,21 +184,21 @@ app.delete("/api/v.1/bookings/:id", checkAuthorization, async (req, res) => {
 app.post("/api/v.1/user/login", async (req, res) => {
     try {
         const user = await usersCollection.findOne({
-            user: req.body.loginName,
+            email: req.body.loginEmail,
         });
 
         if (user) {
-            const { user: username, _id, pass } = user;
+            const { user: email, _id, pass } = user;
 
             const match = await bcrypt.compare(req.body.loginPass, pass);
             if (match) {
                 // Set the user as logged in under current session
-                req.session.user = username;
+                req.session.user = email;
                 req.session.userId = _id;
 
                 res.json({
                     acknowledged: true,
-                    username,
+                    user,
                 });
             } else {
                 res.status(401).json({
@@ -232,13 +232,14 @@ app.post("/api/v.1/user/register", async (req, res) => {
         console.info("api register");
 
         const takenUsername = await usersCollection.findOne({
-            user: req.body.regName,
+            email: req.body.regEmail,
         });
         if (!takenUsername) {
             const hash = await bcrypt.hash(req.body.regPass, SALT_ROUNDS);
 
             const newUser = await usersCollection.insertOne({
                 user: req.body.regName,
+                email: req.body.regEmail,
                 pass: hash,
             });
             if (newUser.acknowledged) {
