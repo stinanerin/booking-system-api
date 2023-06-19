@@ -321,7 +321,9 @@ app.post("/api/v.1/user/logout", restrict, (req, res) => {
 
 // ------------------- Schedule deleteExpiredBookings to run according to DEL_INTERVAL -------------------
 
-setInterval(deleteExpiredBookings, DEL_INTERVAL);
+setInterval(() => {
+    deleteExpiredBookings(req);
+}, DEL_INTERVAL);
 
 // ------------------- Start the server -------------------
 // Starting the server and listening for incoming http requests made to the specified port
