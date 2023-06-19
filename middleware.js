@@ -18,8 +18,6 @@ export const checkAuthorization = async(req, res, next) => {
             .db("booking-system")
             .collection("bookings");
 
-        console.log("bookingsCollection", bookingsCollection);
-
         // Is current user, owner of the booking they are currently trying to access
         const booking = await bookingsCollection.findOne({
             _id: new ObjectId(req.params.id),

@@ -27,6 +27,12 @@ const MONGO_URI = process.env.MONGO_URI;
 import { MongoClient, ObjectId } from "mongodb";
 // ObjectId is needed for accessing specific documents in mongoDB by ID
 
+// ------------------- Del expired booking interval -------------------
+import { setInterval } from "node:timers";
+import { deleteExpiredBookings } from "./helper.js";
+// 1 hour in milliseconds
+const DEL_INTERVAL = 60 * 60 * 1000; 
+
 // ------------------- Connect to database -------------------
 const client = new MongoClient(MONGO_URI);
 await client.connect();
@@ -313,8 +319,12 @@ app.post("/api/v.1/user/logout", restrict, (req, res) => {
     });
 });
 
-//! ------------------- Start the server -------------------
-// Starting the server and listening for http requests made to the specified port
+// ------------------- Schedule deleteExpiredBookings to run according to DEL_INTERVAL -------------------
+
+setInterval(deleteExpiredBookings, DEL_INTERVAL);
+
+// ------------------- Start the server -------------------
+// Starting the server and listening for incoming http requests made to the specified port
 app.listen(PORT, (err) => {
     if (err) {
         console.error("Error when listening: #", code, err);
