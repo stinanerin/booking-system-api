@@ -73,6 +73,7 @@ app.use(
         origin: [
             "https://stormstina.github.io",
             "http://127.0.0.1:5502",
+            "http://localhost:5002",
             "https://express-booking-system-backend.herokuapp.com",
         ],
         methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD", "DELETE"],
