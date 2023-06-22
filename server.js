@@ -236,12 +236,10 @@ app.post("/api/v.1/user/login", async (req, res) => {
 // Register user
 app.post("/api/v.1/user/register", async (req, res) => {
     try {
-        console.info("api register");
-
-        const takenUsername = await usersCollection.findOne({
+        const takenEmail = await usersCollection.findOne({
             email: req.body.regEmail,
         });
-        if (!takenUsername) {
+        if (!takenEmail) {
             const hash = await bcrypt.hash(req.body.regPass, SALT_ROUNDS);
 
             const newUser = await usersCollection.insertOne({
@@ -260,7 +258,7 @@ app.post("/api/v.1/user/register", async (req, res) => {
         } else {
             res.status(400).json({
                 acknowledged: false,
-                error: "Username already exists",
+                error: "Email already exists",
                 customError: true,
             });
             return;
