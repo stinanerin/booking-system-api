@@ -71,7 +71,7 @@ app.use(
 app.use(
     cors({
         origin: [
-            "https://laundry-room-booking-system-de2d4ba71aff.herokuapp.com/frontend/",
+            "https://laundry-room-booking-system-de2d4ba71aff.herokuapp.com",
             "http://127.0.0.1:5502",
             "http://localhost:5002",
             "https://express-booking-system-backend.herokuapp.com",
