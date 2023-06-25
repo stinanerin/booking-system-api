@@ -11,7 +11,10 @@ export const deleteExpiredBookings = async (req) => {
             bookingsCollection
         );
 
-        await bookingsCollection.deleteMany({ date: { $lt: new Date() } });
+        const response = await bookingsCollection.deleteMany({
+            date: { $lt: new Date() },
+        });
+        console.log(`${response.deletedCount} expired bookings deleted`);
 
         console.log("Expired bookings deleted.");
     } catch (error) {
