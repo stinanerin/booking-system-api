@@ -31,8 +31,7 @@ import { MongoClient, ObjectId } from "mongodb";
 import { setInterval } from "node:timers";
 import { deleteExpiredBookings } from "./helper.js";
 // 1 hour in milliseconds
-const DEL_INTERVAL = 100 * 1000; 
-// const DEL_INTERVAL = 60 * 60 * 1000; 
+const DEL_INTERVAL = 60 * 60 * 1000; 
 
 // ------------------- Connect to database -------------------
 const client = new MongoClient(MONGO_URI);

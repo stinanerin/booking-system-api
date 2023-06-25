@@ -4,7 +4,6 @@ export const deleteExpiredBookings = async (app) => {
         const bookingsCollection = app.locals.bookingsCollection;
 
         const ISOCurrentDate = new Date().toISOString()
-        console.log("ISOCurrentDate", ISOCurrentDate);
 
         const response = await bookingsCollection.deleteMany({
             date: { $lt: ISOCurrentDate },
