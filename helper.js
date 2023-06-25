@@ -1,4 +1,4 @@
-export const deleteExpiredBookings = async () => {
+export const deleteExpiredBookings = async (app) => {
     console.log("deleteExpiredBookings running");
     try {
         const bookingsCollection = app.locals.bookingsCollection;

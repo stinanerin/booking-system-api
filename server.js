@@ -325,7 +325,7 @@ app.post("/api/v.1/user/logout", restrict, (req, res) => {
 // ------------------- Schedule deleteExpiredBookings to run according to DEL_INTERVAL -------------------
 
 setInterval(() => {
-    deleteExpiredBookings();
+    deleteExpiredBookings(app);
 }, DEL_INTERVAL);
 
 // ------------------- Start the server -------------------
