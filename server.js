@@ -35,11 +35,14 @@ const DEL_INTERVAL = 60 * 60 * 1000;
 
 // ------------------- Connect to database -------------------
 const client = new MongoClient(MONGO_URI);
+const sessionStore = MongoStore.create({
+    mongoUrl: MONGO_URI,
+    dbName: "booking-system",
+});
 await client.connect();
 
 // Define db and collections
 const db = client.db("booking-system");
-
 
 const bookingsCollection = db.collection("bookings");
 const usersCollection = db.collection("users");
@@ -58,14 +61,11 @@ app.use(
         // don't create session until something stored
         saveUninitialized: false, // GDPR - user has to give consent
         secret: "shhhh very secret string",
-        store: MongoStore.create({
-            mongoUrl: MONGO_URI,
-            dbName: "booking-system",
-        }),
+        store: sessionStore,
         proxy: true,
         cookie: {
-            sameSite: 'none',
-            secure: process.env.NODE_ENV == 'production',
+            sameSite: "none",
+            secure: process.env.NODE_ENV == "production",
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000, // Session duration in milliseconds (e.g., 24 hours)
         },
@@ -315,9 +315,20 @@ app.get("/api/v.1/user/active", (req, res) => {
 
 // Logout user
 app.post("/api/v.1/user/logout", restrict, (req, res) => {
-    req.session.destroy(() => {
-        res.json({
-            loggedin: false,
+    req.session.destroy((err) => {
+        if (err) {
+            console.log(err);
+            return res.sendStatus(500);
+        }
+        sessionStore.destroy(req.sessionID, (err) => {
+            if (err) {
+                console.log(err);
+                return res.sendStatus(500);
+            }
+            res.clearCookie("connect.sid");
+            res.json({
+                loggedin: false,
+            });
         });
     });
 });
