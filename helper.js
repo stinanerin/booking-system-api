@@ -3,10 +3,7 @@ export const deleteExpiredBookings = async (app) => {
     try {
         const bookingsCollection = app.locals.bookingsCollection;
 
-        console.log(
-            "bookingsCollection inside deleteExpiredBookings",
-            bookingsCollection
-        );
+        console.log(new Date());
 
         const response = await bookingsCollection.deleteMany({
             date: { $lt: new Date() },

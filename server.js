@@ -41,6 +41,7 @@ await client.connect();
 // Define db and collections
 const db = client.db("booking-system");
 
+
 const bookingsCollection = db.collection("bookings");
 const usersCollection = db.collection("users");
 
