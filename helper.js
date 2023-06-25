@@ -1,10 +1,7 @@
-export const deleteExpiredBookings = async (req) => {
+export const deleteExpiredBookings = async () => {
     console.log("deleteExpiredBookings running");
     try {
-        const client = req.app.get("mongoClient"); // Access the MongoDB client from the app instance
-        const bookingsCollection = client
-            .db("booking-system")
-            .collection("bookings");
+        const bookingsCollection = app.locals.bookingsCollection;
 
         console.log(
             "bookingsCollection inside deleteExpiredBookings",
@@ -16,7 +13,6 @@ export const deleteExpiredBookings = async (req) => {
         });
         console.log(`${response.deletedCount} expired bookings deleted`);
 
-        console.log("Expired bookings deleted.");
     } catch (error) {
         console.error("Error deleting expired bookings", error);
     }

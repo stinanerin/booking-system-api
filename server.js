@@ -40,10 +40,13 @@ await client.connect();
 
 // Define db and collections
 const db = client.db("booking-system");
-app.set("mongoClient", client); // Store the MongoDB client in the app instance
 
 const bookingsCollection = db.collection("bookings");
 const usersCollection = db.collection("users");
+
+/* Store the bookingsCollection in app.locals,
+which is an object provided by Express.js */
+app.locals.bookingsCollection = bookingsCollection;
 
 // ------------------- Middlewares -------------------
 app.use(cookieParser());
@@ -322,7 +325,7 @@ app.post("/api/v.1/user/logout", restrict, (req, res) => {
 // ------------------- Schedule deleteExpiredBookings to run according to DEL_INTERVAL -------------------
 
 setInterval(() => {
-    deleteExpiredBookings(req);
+    deleteExpiredBookings();
 }, DEL_INTERVAL);
 
 // ------------------- Start the server -------------------
