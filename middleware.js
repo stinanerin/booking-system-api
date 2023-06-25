@@ -13,7 +13,7 @@ export const restrict = (req, res, next) => {
 // Need to signed in and the owner of booking they are trying to access
 export const checkAuthorization = async(req, res, next) => {
     try {
-        const bookingsCollection = app.locals.bookingsCollection;
+        const bookingsCollection = req.app.locals.bookingsCollection;
 
         // Is current user, owner of the booking they are currently trying to access
         const booking = await bookingsCollection.findOne({
