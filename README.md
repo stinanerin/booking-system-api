@@ -4,7 +4,7 @@ This is the backend server for the Booking System application. It provides API e
 
 ## Client application
 
-> [View laundry room booking application](https://stormstina.github.io/laundry-room-booking-system/)
+<!-- > [View laundry room booking application](https://stormstina.github.io/laundry-room-booking-system/) -->
 
 > [View code](https://github.com/stormstina/laundry-room-booking-system)
 
